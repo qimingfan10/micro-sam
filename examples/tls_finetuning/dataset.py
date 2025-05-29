@@ -30,12 +30,23 @@ class TLSDataset(Dataset):
 
         try:
             import openslide  # lazy import
-        except ImportError as e:
-            raise RuntimeError(
-                "openslide-python must be installed to read SVS files"
-            ) from e
+            self.slides = [openslide.OpenSlide(p) for p in self.image_paths]
+        except Exception:
+            # Fall back to a simple PIL based reader so that the example can be
+            # executed without ``openslide-python``. This only supports simple
+            # SVS files that can be opened with PIL as standard TIFF images.
 
-        self.slides = [openslide.OpenSlide(p) for p in self.image_paths]
+            class PILSlide:
+                def __init__(self, path: str) -> None:
+                    self.img = Image.open(path)
+                    self.dimensions = self.img.size
+
+                def read_region(self, loc, _level, size):
+                    x0, y0 = loc
+                    w, h = size
+                    return self.img.crop((x0, y0, x0 + w, y0 + h))
+
+            self.slides = [PILSlide(p) for p in self.image_paths]
         self.masks = [np.array(Image.open(p)) for p in self.mask_paths]
         self.sizes = [slide.dimensions for slide in self.slides]
 
