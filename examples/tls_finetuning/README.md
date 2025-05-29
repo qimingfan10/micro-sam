@@ -67,5 +67,14 @@ examples/tls_finetuning/data/
    it in a location accessible from this folder. Then run
 
    ```bash
+   python finetune_tls.py --checkpoint PATH_TO_SAM_CKPT --data-root data --device cuda
+   ```
 
-   `finetuned_tls_model.pth`.
+   The exported weights will be written to `finetuned_tls_model.pth`.
+
+### Training Approach
+
+The dataset is split in a 90/10 ratio based on slide order. During training
+random `1024x1024` patches are sampled from the slides. This patch based
+finetuning strategy is suitable for whole-slide pancreas cancer images where
+individual cells are relatively small compared to the slide size.
