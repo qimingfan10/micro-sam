@@ -3,10 +3,6 @@
 This example demonstrates how to finetune `micro_sam` on whole-slide images
 (SVS) with cell annotations in GeoJSON format. It prepares instance masks from
 GeoJSON, builds a data loader using `torch_em`, and runs the training with
-`micro_sam.training.train_sam`.  The training logic follows the "joint"
-finetuning strategy, i.e. both the SAM model and the additional UNETR decoder
-are optimized.  This setup is suitable for histopathology data such as
-pancreatic cancer slides.
 
 Files
 -----
@@ -19,6 +15,22 @@ Files
   that mask generation and data loading work.
 - `finetune_tls.py`: Script to start the finetuning and export the model.
   It accepts a `--device` parameter to choose between CPU and GPU.
+
+To quickly test the pipeline without real data run `create_dummy_dataset.py`
+and then `test_dummy_pipeline.py`.
+
+### Setup
+
+Create the conda environment from the repository root:
+
+```bash
+conda env create -f environment.yaml
+conda activate sam
+```
+
+Download a pretrained SAM checkpoint (e.g. `sam_vit_b_01ec64.pth`) manually and
+place it somewhere locally.  When running the training script specify the path
+via `--checkpoint`.
 
 ### Dataset Layout
 
@@ -55,9 +67,5 @@ examples/tls_finetuning/data/
    it in a location accessible from this folder. Then run
 
    ```bash
-   python finetune_tls.py --checkpoint /path/to/sam_vit_b_01ec64.pth --device cuda
-   ```
 
-   Replace `cuda` by `cpu` if you do not have a GPU. This will train SAM together
-   with the instance decoder and export the resulting weights to
    `finetuned_tls_model.pth`.

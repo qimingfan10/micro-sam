@@ -30,4 +30,3 @@ dependencies:
     - timm
     - xarray <2025.3.0
     - zarr <3.0
-    - pip
