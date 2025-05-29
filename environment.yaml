@@ -4,7 +4,9 @@ channels:
 dependencies:
     - nifty >=1.2.3
     - imagecodecs
+    - openslide-python
     - magicgui
+    - shapely
     - napari
     - natsort
     - pip
@@ -28,5 +30,3 @@ dependencies:
     - timm
     - xarray <2025.3.0
     - zarr <3.0
-    - openslide-python
-    - shapely

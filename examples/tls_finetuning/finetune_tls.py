@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import argparse
 
 from typing import Optional
 
@@ -25,11 +26,7 @@ def get_paths(data_root: str):
 def run_training(
     checkpoint_name: str,
     model_type: str,
-    train_decoder: bool,
-    checkpoint: Optional[str],
-    device: str,
-    data_root: str,
-    n_epochs: int,
+
 ) -> None:
     """Run SAM finetuning."""
     patch_shape = (1024, 1024)
@@ -44,8 +41,7 @@ def run_training(
         images, masks, patch_shape, batch_size, n_samples=4, split="val"
     )
 
-    if device == "auto":
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+
 
     sam_training.train_sam(
         name=checkpoint_name,
@@ -53,7 +49,7 @@ def run_training(
         train_loader=train_loader,
         val_loader=val_loader,
         patch_shape=patch_shape,
-        checkpoint=checkpoint,
+
         with_segmentation_decoder=train_decoder,
         device=device,
         n_epochs=n_epochs,
@@ -72,25 +68,7 @@ def export_model(checkpoint_name: str, model_type: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Finetune SAM on TLS data")
-    parser.add_argument("--checkpoint", type=str, default=None, help="Path to pretrained SAM weights")
-    parser.add_argument("--device", type=str, default="auto", help="cpu, cuda or auto")
-    parser.add_argument("--data-root", type=str, default=DEFAULT_ROOT, help="Dataset root directory")
-    parser.add_argument("--epochs", type=int, default=1, help="Number of training epochs")
-    parser.add_argument("--model-type", type=str, default="vit_b", help="SAM model type")
-    parser.add_argument("--name", type=str, default="sam_tls", help="Checkpoint name")
-    parser.add_argument("--train-decoder", action="store_true", help="Also train UNETR decoder")
-    args = parser.parse_args()
 
-    run_training(
-        args.name,
-        args.model_type,
-        args.train_decoder,
-        args.checkpoint,
-        args.device,
-        args.data_root,
-        args.epochs,
-    )
-    export_model(args.name, args.model_type)
 
 
 if __name__ == "__main__":
