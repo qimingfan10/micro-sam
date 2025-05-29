@@ -75,13 +75,14 @@ def convert_dataset(image_dir: str, label_dir: str, output_dir: str) -> None:
 
         try:
             import openslide
-        except ImportError as e:
-            raise RuntimeError(
-                "openslide-python must be installed to read SVS files"
-            ) from e
-
-        slide = openslide.OpenSlide(str(svs_path))
-        width, height = slide.dimensions
+            slide = openslide.OpenSlide(str(svs_path))
+            width, height = slide.dimensions
+        except Exception:
+            # Fallback that uses PIL in case openslide is not available. This
+            # only works for simple SVS files that can be opened as standard
+            # TIFF images.
+            slide = Image.open(str(svs_path))
+            width, height = slide.size
         mask = geojson_to_mask(str(label_file), (width, height))
 
         mask_path = Path(output_dir) / f"{slide_name}.tif"

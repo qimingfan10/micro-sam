@@ -1,6 +1,7 @@
 """Finetune SAM on TLS data."""
 
 import os
+import argparse
 
 import torch
 
@@ -15,7 +16,13 @@ IMAGES = os.path.join(DATA_ROOT, "images")
 MASKS = os.path.join(DATA_ROOT, "masks")
 
 
-def run_training(checkpoint_name: str, model_type: str, train_decoder: bool) -> None:
+def run_training(
+    checkpoint_name: str,
+    model_type: str,
+    checkpoint_path: str,
+    train_decoder: bool,
+    device: str,
+) -> None:
     """Run SAM finetuning."""
     patch_shape = (1024, 1024)
     batch_size = 1
@@ -27,7 +34,7 @@ def run_training(checkpoint_name: str, model_type: str, train_decoder: bool) -> 
         IMAGES, MASKS, patch_shape, batch_size, n_samples=4, split="val"
     )
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = torch.device(device)
 
     sam_training.train_sam(
         name=checkpoint_name,
@@ -35,7 +42,7 @@ def run_training(checkpoint_name: str, model_type: str, train_decoder: bool) -> 
         train_loader=train_loader,
         val_loader=val_loader,
         patch_shape=patch_shape,
-        checkpoint=None,
+        checkpoint=checkpoint_path,
         with_segmentation_decoder=train_decoder,
         device=device,
     )
@@ -52,12 +59,40 @@ def export_model(checkpoint_name: str, model_type: str) -> None:
 
 
 def main() -> None:
-    model_type = "vit_b"
-    checkpoint_name = "sam_tls"
-    train_decoder = True
+    parser = argparse.ArgumentParser(description="Finetune SAM on TLS data")
+    parser.add_argument(
+        "--checkpoint",
+        required=True,
+        help="Path to the pretrained SAM weights (*.pth)",
+    )
+    parser.add_argument(
+        "--device",
+        default="cuda" if torch.cuda.is_available() else "cpu",
+        choices=["cpu", "cuda"],
+        help="Device for training",
+    )
+    parser.add_argument("--model-type", default="vit_b", help="SAM model type")
+    parser.add_argument(
+        "--checkpoint-name",
+        default="sam_tls",
+        help="Name for the training run",
+    )
+    parser.add_argument(
+        "--train-decoder",
+        action="store_true",
+        help="Train with instance segmentation decoder",
+    )
 
-    run_training(checkpoint_name, model_type, train_decoder)
-    export_model(checkpoint_name, model_type)
+    args = parser.parse_args()
+
+    run_training(
+        checkpoint_name=args.checkpoint_name,
+        model_type=args.model_type,
+        checkpoint_path=args.checkpoint,
+        train_decoder=args.train_decoder,
+        device=args.device,
+    )
+    export_model(args.checkpoint_name, args.model_type)
 
 
 if __name__ == "__main__":
